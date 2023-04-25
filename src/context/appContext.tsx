@@ -5,7 +5,7 @@ import { Actions } from "../types/types";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const initialStateApp: AppProps = {
-  stateOverall: false,
+  response: [],
   question: data
 };
 

@@ -1,43 +1,74 @@
-import { useEffect, useState } from "react";
-import { ButtonOption } from "../setting/setting";
-
+import { TimerStyled } from "@styled/components/index.styled";
+import { useContext, useEffect } from "react";
+import { getStateQuestions } from "../adapters/getStateQuestions.adapter";
+import AppContext from "../context/appContext";
 interface Prop {
-  state: string;
-  setButtonVideo: (state: string) => void
+  isActive: boolean;
+  setIsActive: (state: boolean) => void;
+  mediaStreamRef: React.MutableRefObject<MediaStream | null>;
+  time: number;
+  preguntaId: string | undefined;
 }
-const Timer = ({ state, setButtonVideo }: Prop) => {
+
+const Timer = ({ isActive, setIsActive, mediaStreamRef, preguntaId, time }: Prop) => {
+
   const maxTimer = 60;
-  const [timer, setTimer] = useState(0);
+  const { state, dispatch } = useContext(AppContext);
+
 
   useEffect(() => {
-    console.log(state);
-    if (state === ButtonOption.START && timer >= maxTimer) {
-      setTimer(maxTimer);
 
+    if (!isActive && time >= maxTimer) {
 
-    } else {
+      dispatch({
+        type: "SET_STATE_QUESTION",
+        payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+          time: maxTimer
+        }))
+      });
+
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        dispatch({
+          type: "SET_STATE_QUESTION",
+          payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+            stateButton: "replay"
+          }))
+        });
+
+      }
+    } else if (isActive) {
       const interval = setInterval(() => {
-        setTimer(prevTimer => prevTimer + 1);
+        dispatch({
+          type: "SET_STATE_QUESTION",
+          payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+            time: time + 1
+          }))
+        });
+
       }, 1000);
 
+      if (time >= maxTimer) {
+        setIsActive(false);
+      }
       return () => {
         clearInterval(interval);
-
-        if (timer >= maxTimer) {
-          setButtonVideo("stop");
-        }
       };
     }
 
-  }, [state, timer, maxTimer]);
 
-  const minutes = Math.floor(timer / 60);
-  const seconds = timer % 60;
+  }, [state, time, maxTimer]);
+
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
 
   const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   return (
-    <span>{formattedTime}/01:00</span>
+    <TimerStyled>
+      <p>{formattedTime}/01:00</p>
+      <div />
+    </TimerStyled>
   );
 };
 

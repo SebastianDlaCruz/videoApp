@@ -6,13 +6,13 @@ display: block;
 block-size: 393px;
 inline-size: 245px;
 padding: 22px;
-border: 1px solid #fff;
 border-radius: 12px;
 text-align: center;
-
 background-image: url(${({ src }) => src})  ;
 background-repeat: no-repeat;
 background-size: cover;
+background-color: #050505d1;
+box-shadow: 0px 8px 10px #c9c9c9e8;
 
 
 footer{
@@ -24,6 +24,6 @@ footer{
   padding: 12px;
   border-end-end-radius: 12px;
   border-end-start-radius: 12px;
-  background-color: #413f3fb3;
+  background-color: #0c0c0c;
 }
 `;

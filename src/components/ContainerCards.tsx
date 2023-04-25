@@ -1,4 +1,4 @@
-import { ContainerCadsStyled } from "@styled/components/ContainerCadsStyled.styled";
+import { ContainerCadsStyled } from "@styled/components/index.styled";
 import { useContext } from "react";
 import AppContext from "../context/appContext";
 import Card from "./Card";
@@ -9,7 +9,8 @@ const ContainerCards = () => {
 
   return (
     <ContainerCadsStyled>
-      {state.question.map(item => <Card text={item.question} src={item.imgVideo || imgDefault} page={item.numberPage} />)}
+      {state.question.map((item, index) => <Card text={item.question || ""} key={index}
+        src={item.imgVideo || imgDefault} page={item.numberPage || ""} />)}
     </ContainerCadsStyled>
   );
 };

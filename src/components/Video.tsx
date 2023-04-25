@@ -1,10 +1,11 @@
-import { ContainerVideoStyled } from "@styled/components/ContainerVideoStyled.styled";
-import { VideoStyled } from "@styled/components/VideoStyled.styled";
+import { ContainerVideoStyled, VideoStyled } from "@styled/components/index.styled";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { getStateQuestions } from "../adapters/getStateQuestions.adapter";
 import AppContext from "../context/appContext";
 import { ButtonOption } from "../setting/setting";
 import Button from "./Button";
+import ContainerLinks from "./ContainerLinks";
 import Timer from "./Timer";
 import play from "/assets/play.svg";
 import replay from "/assets/replay.svg";
@@ -12,35 +13,42 @@ import stop from "/assets/stop.svg";
 const Video = () => {
 
   const { state, dispatch } = useContext(AppContext);
-  const [buttonVideo, setButtonVideo] = useState("start");
+  const [isActive, setIsActive] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+
   const { preguntaId } = useParams();
+  const idPage = Number(preguntaId);
+
 
   const constraints = {
     audio: true,
     video: { width: 1200, height: 900 }
   };
 
-  const idPage = Number(preguntaId);
 
 
   const handleInitPlay = () => {
 
     navigator.mediaDevices.
       getUserMedia(constraints).then((mediaStream) => {
-
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play();
             mediaRecorderRef.current = new MediaRecorder(mediaStream);
             mediaRecorderRef.current.start();
-            setButtonVideo("stop");
+            dispatch({
+              type: "SET_STATE_QUESTION",
+              payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+                stateButton: "stop"
+              }))
+            });
+            setIsActive(true);
             mediaStreamRef.current = mediaStream;
           };
         }
@@ -51,24 +59,31 @@ const Video = () => {
   };
 
 
+
   const handleStop = () => {
-    if (mediaRecorderRef.current) {
-
+    if (mediaRecorderRef.current && mediaStreamRef.current) {
       mediaRecorderRef.current.stop();
-      setButtonVideo("replay");
+      dispatch({
+        type: "SET_STATE_QUESTION",
+        payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+          stateButton: "replay"
+        }))
+      });
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      setIsActive(false);
     }
 
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-    }
-    setButtonVideo("stop");
   };
+
+
+
 
 
   const handleDataAvailable = (event: BlobEvent) => {
     const url = window.URL.createObjectURL(event.data);
 
     setVideoUrl(url);
+
     if (videoRef.current) {
       const video = videoRef.current;
       const canvas = document.createElement("canvas");
@@ -79,24 +94,21 @@ const Video = () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const thumbnailUrl = canvas.toDataURL();
         setThumbnailUrl(thumbnailUrl);
+
       }
     }
 
   };
 
 
-
-
   if (mediaRecorderRef.current) {
     mediaRecorderRef.current.ondataavailable = handleDataAvailable;
-
   }
 
   const handleReplay = () => {
-
     if (videoRef.current) {
       videoRef.current.srcObject = null;
-      videoRef.current.src = state.question[idPage - 1].srcVideo;
+      videoRef.current.src = state.question[idPage - 1].srcVideo || "";
       videoRef.current.controls = false;
       videoRef.current.play();
     }
@@ -104,29 +116,28 @@ const Video = () => {
 
 
   useEffect(() => {
-
     if (state.question[idPage - 1].status) {
-      setButtonVideo(ButtonOption.REPLAY);
+      dispatch({
+        type: "SET_STATE_QUESTION",
+        payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+          stateButton: "replay"
+        }))
+      });
     }
   }, []);
 
   useEffect(() => {
-    if (thumbnailUrl !== "" && videoUrl !== "") {
+    if (thumbnailUrl !== ""
+      && videoUrl !== ""
+      && !state.question[idPage - 1].status) {
       dispatch({
-        type: "SET_IMAGE",
-        payload: state.question.map(item => {
+        type: "SET_STATE_QUESTION",
+        payload: state.question.map(item => getStateQuestions(item, preguntaId, {
+          imgVideo: thumbnailUrl,
+          srcVideo: videoUrl,
+          status: true
+        }))
 
-          if (item.numberPage === preguntaId) {
-            return {
-              ...item,
-              imgVideo: thumbnailUrl,
-              srcVideo: videoUrl,
-              status: true
-            };
-          } else {
-            return item;
-          }
-        })
       });
     }
 
@@ -137,12 +148,17 @@ const Video = () => {
     <ContainerVideoStyled>
 
       <VideoStyled>
-        <Timer state={buttonVideo} setButtonVideo={setButtonVideo} />
+        <Timer isActive={isActive}
+          setIsActive={setIsActive}
+          mediaStreamRef={mediaStreamRef}
+          preguntaId={preguntaId}
+          time={state.question[idPage - 1].time || 0}
+        />
         <video ref={videoRef} />
         {
-          (buttonVideo === ButtonOption.START)
+          (state.question[idPage - 1].stateButton === ButtonOption.START)
             ? (<Button src={play} onClick={handleInitPlay} />)
-            : (buttonVideo === ButtonOption.STOP)
+            : (state.question[idPage - 1].stateButton === ButtonOption.STOP)
               ? (<Button src={stop} onClick={handleStop} />)
               : (<Button src={replay} onClick={handleReplay} />)
         }
@@ -152,8 +168,9 @@ const Video = () => {
         <div>
         </div>
       </VideoStyled>
-      <Link to={"/"}>atras</Link>
-      <button>Siguiente</button>
+
+      <ContainerLinks idPage={idPage} />
+
     </ContainerVideoStyled>
   );
 };

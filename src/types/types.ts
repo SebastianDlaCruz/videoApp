@@ -8,5 +8,5 @@ export type ImagesProps = {
 
 
 export type Actions =
-  { type: "SET_IMAGE", payload: QuestionProps[] }
-  | { type: "SET_VIDEO", payload: QuestionProps[] };
+  { type: "SET_STATE_QUESTION", payload: QuestionProps[] }
+  | { type: "SET_RESPONSE", payload: string[] };

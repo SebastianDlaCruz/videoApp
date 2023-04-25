@@ -1,8 +1,8 @@
-import { HeaderStyled } from "@styled/components/HeaderStyled.styled";
+import { HeaderStyled } from "@styled/components/index.styled";
 const Header = () => {
   return (
     <HeaderStyled>
-      <h1>Video Cuestionario</h1>
+      <h1>Video Cuestionario Soda Stereo</h1>
     </HeaderStyled>
   );
 };

@@ -1,4 +1,4 @@
-import { ButtonStyled } from "@styled/components/ButtonStyled.styled";
+import { ButtonStyled } from "@styled/components/index.styled";
 
 interface Props {
   src: string

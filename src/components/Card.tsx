@@ -1,4 +1,4 @@
-import { CardStyled } from "@styled/components/CadStyled.styled";
+import { CardStyled } from "@styled/components/index.styled";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import AppContext from "../context/appContext";
@@ -8,12 +8,14 @@ interface Props {
   text: string;
   src: string;
   page: string
+
 }
 const Card = ({ text, src, page }: Props) => {
   const { state } = useContext(AppContext);
   const number = Number(page);
   return (
-    <CardStyled to={`pregunta/${page}`} src={state.question[number - 1].imgVideo || src}>
+    <CardStyled to={`pregunta/${page}`}
+      src={state.question[number - 1].imgVideo || src} >
       <Link to={`pregunta/${page}`}>
         <footer>
           <p>{text}</p>
